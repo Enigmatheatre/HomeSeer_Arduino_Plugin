@@ -57,13 +57,12 @@ void UDPCheck(){
 
 
 //********************************Input Setup*******************************
-byte InPinArray[] = {
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+byte InPinArray[30] = { 0 };
 byte Debounce = 30;
 byte count = 0; 
 byte NoOfInPins = 0; 
-int InStateArray  [(sizeof(InPinArray) / 2)];
-unsigned long PrevDebounce [(sizeof(InPinArray) / 2)];
+int InStateArray  [(sizeof(InPinArray) / sizeof(InPinArray[0]))];
+unsigned long PrevDebounce [(sizeof(InPinArray) / sizeof(InPinArray[0]))];
 
 void InputCheck(){
   byte pinread;
@@ -86,16 +85,14 @@ void InputCheck(){
 }
 
 //*******************************Analogue Setup****************************
-byte  AnalogPinArray[] = {
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-int AnalogueDelay[] = {
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+byte  AnalogPinArray[15] = {0};
+int AnalogueDelay[15] = {0};
   
-word AnalogueInvert = 0;
+word AnalogueInvert = 0;  //word = 2 bytes * 8 bits so 16 postitions TODO: base this off of actual maximum number of analog inputs, #/8 then round up
 
 byte NoOfAnalogPins =0;
-int AnalogStateArray[(sizeof(AnalogPinArray) / 2)];
-unsigned long PrevAnalogeMillis[sizeof(AnalogPinArray) / 2]; 
+int AnalogStateArray[(sizeof(AnalogPinArray) / sizeof(AnalogPinArray[0]))];
+unsigned long PrevAnalogeMillis[sizeof(AnalogPinArray) / sizeof(AnalogPinArray[0])]; 
 
   void  AnalogueCheck(){
     for (count=0;count<NoOfAnalogPins;count++) {
@@ -123,15 +120,14 @@ unsigned long PrevAnalogeMillis[sizeof(AnalogPinArray) / 2];
 
 
 //*****************************PWM Setup****************************
-byte PwmPinArray[] = {
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+byte PwmPinArray[25] = {0};
 byte NoOfPwmPins = 0;
-int PwmStateArray[(sizeof(PwmPinArray) / 2)];
-int PwmFadeTime[(sizeof(PwmPinArray) / 2)];
-byte fadeTarget[(sizeof(PwmPinArray) / 2)];
-byte fadeValueTweened[(sizeof(PwmPinArray) / 2)];
-byte fadeValue[(sizeof(PwmPinArray) / 2)];
-unsigned long fadeTimerLast[(sizeof(PwmPinArray) / 2)];
+int PwmStateArray[(sizeof(PwmPinArray) / sizeof(PwmPinArray[0]))];
+int PwmFadeTime[(sizeof(PwmPinArray) / sizeof(PwmPinArray[0]))];
+byte fadeTarget[(sizeof(PwmPinArray) / sizeof(PwmPinArray[0]))];
+byte fadeValueTweened[(sizeof(PwmPinArray) / sizeof(PwmPinArray[0]))];
+byte fadeValue[(sizeof(PwmPinArray) / sizeof(PwmPinArray[0]))];
+unsigned long fadeTimerLast[(sizeof(PwmPinArray) / sizeof(PwmPinArray[0]))];
 
 void PWMCheck(){
   for (count=0;count<NoOfPwmPins;count++) { 
@@ -169,13 +165,12 @@ float Quad_easeInOut(float t, float fixedScaleStart, float fixedScaleEnd){
 //*****************************Servo Setup***************************
 #include <Servo.h> 
 //bool UseServo = false;
-byte ServoPinArray[8] = {
-  0};
+byte ServoPinArray[8] = {0};
 byte NoOfServos = 0;
-Servo myservo[(sizeof(ServoPinArray) / 2)];
-int ServoPosArray[(sizeof(ServoPinArray) / 2)];
-int ServoOldPosArray[(sizeof(ServoPinArray) / 2)];
-int ServoSpeedArray[(sizeof(ServoPinArray) / 2)];
+Servo myservo[(sizeof(ServoPinArray) / sizeof(ServoPinArray[0]) )];
+int ServoPosArray[(sizeof(ServoPinArray) / sizeof(ServoPinArray[0]))];
+int ServoOldPosArray[(sizeof(ServoPinArray) / sizeof(ServoPinArray[0]))];
+int ServoSpeedArray[(sizeof(ServoPinArray) / sizeof(ServoPinArray[0]))];
 
 void ServoCheck(){
   for (count=0;count<NoOfServos;count++) { 
@@ -190,15 +185,14 @@ void ServoCheck(){
 //***************************One Wire Setup**************************
 #include <OneWire.h>
 #include <DallasTemperature.h>
-int OneWirePin = EEPROM.read(1);
-#define TEMPERATURE_PRECISION 7
+byte OneWirePin = EEPROM.read(1);
+#define TEMPERATURE_PRECISION 9
 OneWire oneWire(OneWirePin);
 DallasTemperature sensors(&oneWire);
 DeviceAddress tempDeviceAddress;
 unsigned long PrevOneMillis = 0;
 int OneUpdateTime = 2500;
-float onewiretemps[]={
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+float onewiretemps[15] = {0};
 
 void OneWireCheck(){
   if (millis() - PrevOneMillis > OneUpdateTime){
