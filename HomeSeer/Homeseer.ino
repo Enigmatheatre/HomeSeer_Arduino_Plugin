@@ -86,7 +86,7 @@ void InputCheck(){
 
 //*******************************Analogue Setup****************************
 byte  AnalogPinArray[15] = {0};
-int AnalogueDelay[15] = {0};
+int AnalogueDelay[(sizeof(AnalogPinArray) / sizeof(AnalogPinArray[0]))] = {0};
   
 word AnalogueInvert = 0;  //word = 2 bytes * 8 bits so 16 postitions TODO: base this off of actual maximum number of analog inputs, #/8 then round up
 
