@@ -298,79 +298,7 @@ void DataEvent() {
   if (Byte1 == BoardAdd) {
 
     switch (Byte2) {
-
-    case 'X':
-      NoOfInPins=0;
-      NoOfServos=0;
-      NoOfAnalogPins =0;
-      NoOfPwmPins=0;
-      break;
-
-    case 'c':
-      IsConnected = true;
-
-      for (count=0;count<NoOfInPins;count++) { 
-        SendByte(BoardAdd);
-        SendChar(" I ");
-        SendByte(count+1);
-        SendChar(" ");
-        SendByte(digitalRead (InPinArray[count]));
-        Sendln();
-        InStateArray[count] = (digitalRead (InPinArray[count]));
-        delay(100);
-      }
-      break;
-
-    case 'C':
-      SendChar("Version ");
-      SendByte(BoardAdd);
-      SendChar(" ");
-      SendChar(Version);
-      SendChar(" HS3");
-      Sendln();
-      delay(100);
-      SendChar("Connected ");
-      SendByte(BoardAdd);
-      Sendln();
-      delay(100);
-      IsConnected = false;
-      break;
-
-
-    case 's':   
-      ServoPinArray[Byte3-1] = Byte4;
-      myservo[Byte3-1].attach(Byte4);
-      //      ServoPosArray[count] = 90;
-      ServoSpeedArray[Byte3-1] = 0;
-
-      if (Byte3 > NoOfServos){
-        NoOfServos = Byte3;
-        // UseServo = true;
-      }
-      break; 
-
-    case 'S':   
-      ServoPosArray[Byte3-1] = Byte4;
-      break; 
-
-    case 'd':
-      Debounce = Byte3;
-      break; 
-
-    case 'O':
-      pinMode(Byte3, OUTPUT);
-      digitalWrite(Byte3, Byte4);
-      break; 
-
-    case 'I':
-      pinMode(Byte4, INPUT);
-      digitalWrite(Byte4, HIGH); 
-      if (Byte3 > NoOfInPins){
-        NoOfInPins = Byte3;
-      }
-      InPinArray[Byte3-1] = Byte4;
-      break; 
-
+      
     case 'A':
       pinMode(Byte4, INPUT);
       if (Byte3 > NoOfAnalogPins){
@@ -385,6 +313,69 @@ void DataEvent() {
     bitWrite(AnalogueInvert,Byte3-1,Byte4);
       //AnalogueInvert[Byte3-1] = Byte4;
       break; 
+      
+    case 'C':
+      SendChar("Version ");
+      SendByte(BoardAdd);
+      SendChar(" ");
+      SendChar(Version);
+      SendChar(" HS3");
+      Sendln();
+      delay(100);
+      SendChar("Connected ");
+      SendByte(BoardAdd);
+      Sendln();
+      delay(100);
+      IsConnected = false;
+      break;
+      
+     case 'c':
+      IsConnected = true;
+
+      for (count=0;count<NoOfInPins;count++) { 
+        SendByte(BoardAdd);
+        SendChar(" I ");
+        SendByte(count+1);
+        SendChar(" ");
+        SendByte(digitalRead (InPinArray[count]));
+        Sendln();
+        InStateArray[count] = (digitalRead (InPinArray[count]));
+        delay(100);
+      }
+      break;
+
+    case 'D':
+      IsConnected = false;
+      break; 
+      
+    case 'd':
+      Debounce = Byte3;
+      break; 
+
+    case 'F':
+      PwmFadeTime[Byte3-1] = Byte4;
+      break; 
+
+    case 'I':
+      pinMode(Byte4, INPUT);
+      digitalWrite(Byte4, HIGH); 
+      if (Byte3 > NoOfInPins){
+        NoOfInPins = Byte3;
+      }
+      InPinArray[Byte3-1] = Byte4;
+      break; 
+      
+    case 'K':
+      delay(200);
+      SendChar("Alive ");
+      SendByte(BoardAdd);
+      Sendln();
+      break; 
+      
+    case 'O':
+      pinMode(Byte3, OUTPUT);
+      digitalWrite(Byte3, Byte4);
+      break; 
 
     case 'p':
       pinMode(Byte4, OUTPUT);
@@ -392,8 +383,39 @@ void DataEvent() {
         NoOfPwmPins = Byte3;
       }
       PwmPinArray[Byte3-1] = Byte4;
-      break;   
+      break;  
+      
+    case 'P':
+      PwmStateArray[Byte3-1] = Byte4;
+      break;
+      
+    case 'R':
+      ServoPosArray[Byte3-1] = Byte4;
+      break; 
 
+    case 'r':
+      SendChar("Reseting ");
+      Sendln();
+      delay(200);
+      resetFunc();  //call reset
+      break; 
+
+    case 'S':   
+      ServoPosArray[Byte3-1] = Byte4;
+      break; 
+      
+    case 's':   
+      ServoPinArray[Byte3-1] = Byte4;
+      myservo[Byte3-1].attach(Byte4);
+      //      ServoPosArray[count] = 90;
+      ServoSpeedArray[Byte3-1] = 0;
+
+      if (Byte3 > NoOfServos){
+        NoOfServos = Byte3;
+        // UseServo = true;
+      }
+      break; 
+      
     case 'W':
       OneWirePin = Byte3;
       EEPROM.write(1,Byte3);
@@ -408,36 +430,13 @@ void DataEvent() {
         }
       }
       break; 
-
-    case 'K':
-      delay(200);
-      SendChar("Alive ");
-      SendByte(BoardAdd);
-      Sendln();
-      break; 
-
-    case 'P':
-      PwmStateArray[Byte3-1] = Byte4;
+      
+      case 'X':
+      NoOfInPins=0;
+      NoOfServos=0;
+      NoOfAnalogPins =0;
+      NoOfPwmPins=0;
       break;
-
-    case 'F':
-      PwmFadeTime[Byte3-1] = Byte4;
-      break; 
-
-    case 'R':
-      ServoPosArray[Byte3-1] = Byte4;
-      break; 
-
-    case 'r':
-      SendChar("Reseting ");
-      Sendln();
-      delay(200);
-      resetFunc();  //call reset
-      break; 
-
-    case 'D':
-      IsConnected = false;
-      break;   
 
     }
   }
