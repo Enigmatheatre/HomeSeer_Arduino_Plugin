@@ -31,8 +31,7 @@ IPAddress HomeseerIP(192,168,0,123); //Homeseer IP address
 int FromHS[10];
 
 //************Do not change anything in Here*****************
-// *
-boolean IsConnected = false;                                // *
+boolean IsConnected = false;                             // *
 char packetBuffer[UDP_TX_PACKET_MAX_SIZE];               // *
 EthernetUDP Udp;                                         // *
 unsigned int ServerPort = 8888;                          // *
