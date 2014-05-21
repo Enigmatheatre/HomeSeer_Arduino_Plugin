@@ -1,40 +1,44 @@
+//For serial set to 0 and for Ethernet set to 1
+#define ISIP 0
 
+//Do NOT modify these
+#if ISIP == 1
 #include <SPI.h>       
 #include <Ethernet.h>
 #include <EthernetUdp.h> 
+#endif
 /************************************************************
  *Arduino to Homeseer 3 Plugin API writen by Enigma Theatre.*
- * V1.0.0.22                                                *
+ * V1.0.0.23                                                *
  *                                                          *
  *******Change the values below only*************************
  */
 
 
 //Address of the board.
-byte BoardAdd = 1;
+const byte BoardAdd = 1;
 
-//For serial set to 0 and for Ethernet set to 1
-#define ISIP 0
-
+#if ISIP == 1
 // Enter a MAC address and IP address for your board below.
-byte mac[] = {
-  0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
+const byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
 
 // The IP address will be dependent on your local network.
 IPAddress ip(192,168,0,100);     //IP entered in HS config.
 
-unsigned int localPort = 9000;      //port entered in HS config.
+const unsigned int localPort = 9000;      //port entered in HS config.
 
-IPAddress HomeseerIP(192,168,0,123); //Homeseer IP address
+const IPAddress HomeseerIP(192,168,0,123); //Homeseer IP address
+#endif
 
-
-int FromHS[10];
 
 //************Do not change anything in Here*****************
+int FromHS[10];                                          // *
 boolean IsConnected = false;                             // *
+#if ISIP == 1                                            // *
 char packetBuffer[UDP_TX_PACKET_MAX_SIZE];               // *
 EthernetUDP Udp;                                         // *
-unsigned int ServerPort = 8888;                          // *
+const unsigned int ServerPort = 8888;                    // *
+#endif                                                   // *
 //***********************************************************
 
 
@@ -53,10 +57,9 @@ void setup() {
 
 
 void loop() {
+#if ISIP == 1
   IsUDP();
-  if (IsConnected == true)
-  {
-
+#endif
 
     //************************
     //Add YOUR CODE HERE;
@@ -65,14 +68,16 @@ void loop() {
      Eg.. SendToHS(1,200); where 1 is the API device in homeseer and 200 is the value to send
      To Recieve data from Homeseer look up the FromHS array that is updated when the device value changes.
      Eg.. FromHS[5] would be the data from API Output device 5
+     All code that is located just below this block will execute regardless of connection status!
+     You can include SendToHS() calls, however when there isn't an active connection, it will just return and continue.
+     If you only want code to execute when HomeSeer is connected, put it inside the if statement below.
      */
 
+/*Execute regardless of connection status*/
 
 
-
-
-
-
+ if (IsConnected == true) {
+   /*Execute ONLY when HomeSeer is connected*/
 
   }
 }
@@ -134,7 +139,7 @@ void loop() {
 
 
 
-char* Version = "API1.0.0.22";
+const char* Version = "API1.0.0.23";
 
 byte Byte1,Byte2,Byte3;
 int Byte4,Byte5;
@@ -164,6 +169,7 @@ void HSSetup() {
 
 }
 
+#if ISIP == 1
 void IsUDP(){
   int packetSize = Udp.parsePacket();
   if(packetSize)
@@ -179,7 +185,7 @@ void IsUDP(){
   }
 }
 
-
+#else
 void serialEvent() {
   while (Serial.available() > 0) {
     delay(17);
@@ -194,7 +200,7 @@ void serialEvent() {
     DataEvent();
   }
 }
-
+#endif
 void DataEvent() {
 
 
@@ -260,7 +266,7 @@ void DataEvent() {
 }
 
 void SendToHS(byte Device, long Data){
-
+if (IsConnected == true) {
 #if ISIP == 1
   Udp.beginPacket(Udp.remoteIP(), ServerPort);
   Udp.print(BoardAdd);
@@ -277,6 +283,6 @@ void SendToHS(byte Device, long Data){
   Serial.println(Data);
 #endif
 }
-
+}
 
 
