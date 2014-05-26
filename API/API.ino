@@ -37,6 +37,7 @@ char packetBuffer[UDP_TX_PACKET_MAX_SIZE];               // *
 EthernetUDP Udp;                                         // *
 const unsigned int ServerPort = 8888;                    // *
 #endif                                                   // *
+void(* resetFunc) (void) = 0;                            // *
 //***********************************************************
 
 
@@ -250,6 +251,13 @@ void DataEvent() {
       Serial.print("Alive ");
       Serial.println(BoardAdd);
 #endif
+      break; 
+      
+      case 'r':
+      SendChar("Reseting ");
+      Sendln();
+      delay(200);
+      resetFunc();  //call reset
       break; 
 
     case 'O':
