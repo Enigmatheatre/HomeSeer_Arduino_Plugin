@@ -9,7 +9,7 @@
 #endif
 /************************************************************
  *Arduino to Homeseer 3 Plugin API writen by Enigma Theatre.*
- * V1.0.0.23                                                *
+ * V1.0.0.22                                                *
  *                                                          *
  *******Change the values below only*************************
  */
@@ -23,10 +23,8 @@ const byte BoardAdd = 1;
 const byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
 
 // The IP address will be dependent on your local network.
-IPAddress ip(192,168,0,100);     //IP entered in HS config.
-
+const IPAddress ip(192,168,0,100);     //IP entered in HS config.
 const unsigned int localPort = 9000;      //port entered in HS config.
-
 const IPAddress HomeseerIP(192,168,0,123); //Homeseer IP address
 #endif
 
@@ -139,7 +137,7 @@ void loop() {
 
 
 
-const char* Version = "API1.0.0.23";
+const char* Version = "API1.0.0.22";
 
 byte Byte1,Byte2,Byte3;
 int Byte4,Byte5;

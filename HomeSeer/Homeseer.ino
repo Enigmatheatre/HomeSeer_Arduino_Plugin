@@ -10,8 +10,8 @@
 
 
 //Global Variables
-byte BoardAdd = 1;
 #define ISIP 0
+const byte BoardAdd = 1;
 byte Byte1,Byte2,Byte3;
 int Byte4,Byte5;
 char* Version = "1.0.0.22";
@@ -26,16 +26,15 @@ void(* resetFunc) (void) = 0;
 #include <Ethernet.h>
 #include <EthernetUdp.h> 
 
-byte mac[] = {
-  0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
-IPAddress ip(192,168,0,145);     //IP entered in HS config.
-unsigned int localPort = 9000;      //port entered in HS config.
-IPAddress HomeseerIP(192,168,0,20); //Homeseer IP address
+const byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
+const IPAddress ip(192,168,0,145);     //IP entered in HS config.
+const unsigned int localPort = 9000;      //port entered in HS config.
+const IPAddress HomeseerIP(192,168,0,20); //Homeseer IP address
 
 char packetBuffer[UDP_TX_PACKET_MAX_SIZE]; //buffer to hold incoming packet,
 
 EthernetUDP Udp;
-unsigned int ServerPort = 8888;     // port to Send To
+const unsigned int ServerPort = 8888;     // port to Send To
 
 void UDPCheck(){
   byte packetSize = Udp.parsePacket();
