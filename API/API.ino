@@ -32,14 +32,13 @@ const IPAddress HomeseerIP(192,168,0,123); //Homeseer IP address
 
 
 //************Do not change anything in Here*****************
-// *
-int FromHS[10];
-boolean IsConnected = false;                                // *
-#if ISIP == 1
+int FromHS[10];                                          // *
+boolean IsConnected = false;                             // *
+#if ISIP == 1                                            // *
 char packetBuffer[UDP_TX_PACKET_MAX_SIZE];               // *
 EthernetUDP Udp;                                         // *
-const unsigned int ServerPort = 8888;                          // *
-#endif
+const unsigned int ServerPort = 8888;                    // *
+#endif                                                   // *
 //***********************************************************
 
 
@@ -59,9 +58,8 @@ void setup() {
 
 void loop() {
 #if ISIP == 1
-IsUDP();
+  IsUDP();
 #endif
-
 
     //************************
     //Add YOUR CODE HERE;
@@ -78,12 +76,9 @@ IsUDP();
 /*Execute regardless of connection status*/
 
 
+ if (IsConnected == true) {
+   /*Execute ONLY when HomeSeer is connected*/
 
-
-  if (IsConnected == true) {
-  /*Execute ONLY when HomeSeer is connected*/
-  
-  
   }
 }
 
@@ -189,6 +184,7 @@ void IsUDP(){
     DataEvent();
   }
 }
+
 #else
 void serialEvent() {
   while (Serial.available() > 0) {
@@ -205,8 +201,9 @@ void serialEvent() {
   }
 }
 #endif
-
 void DataEvent() {
+
+
 
   if (Byte1 == BoardAdd) {
     switch (Byte2) {
