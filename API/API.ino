@@ -254,8 +254,6 @@ void DataEvent() {
       break; 
       
       case 'r':
-      SendChar("Reseting ");
-      Sendln();
       delay(200);
       resetFunc();  //call reset
       break; 
