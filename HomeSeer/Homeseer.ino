@@ -3,7 +3,7 @@
 
 /********************************************************
  *Arduino to Homeseer 3 Plugin writen by Enigma Theatre.*
- * V1.0.0.22                                            *
+ * V1.0.0.24                                            *
  *                                                      *
  *******Do not Change any values below*******************
  */
@@ -14,7 +14,7 @@
 const byte BoardAdd = 1;
 byte Byte1,Byte2,Byte3;
 int Byte4,Byte5;
-char* Version = "1.0.0.22";
+char* Version = "1.0.0.24";
 bool IsConnected = false;
 void(* resetFunc) (void) = 0; 
 
@@ -26,7 +26,7 @@ void(* resetFunc) (void) = 0;
 #include <Ethernet.h>
 #include <EthernetUdp.h> 
 
-const byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
+byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
 const IPAddress ip(192,168,0,145);     //IP entered in HS config.
 const unsigned int localPort = 9000;      //port entered in HS config.
 const IPAddress HomeseerIP(192,168,0,20); //Homeseer IP address
