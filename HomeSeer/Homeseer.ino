@@ -3,7 +3,7 @@
 
 /********************************************************
  *Arduino to Homeseer 3 Plugin writen by Enigma Theatre.*
- * V1.0.0.24                                            *
+ * V1.0.0.22                                            *
  *                                                      *
  *******Do not Change any values below*******************
  */
@@ -27,9 +27,11 @@ void(* resetFunc) (void) = 0;
 #include <EthernetUdp.h> 
 
 byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
-const IPAddress ip(192,168,0,145);     //IP entered in HS config.
+IPAddress ip(192,168,0,145);     //IP entered in HS config.
 const unsigned int localPort = 9000;      //port entered in HS config.
-const IPAddress HomeseerIP(192,168,0,20); //Homeseer IP address
+IPAddress HomeseerIP(192,168,0,20); //Homeseer IP address
+IPAddress ServerIP(EEPROM.read(2),EEPROM.read(3),EEPROM.read(4),EEPROM.read(5));
+byte EEpromVersion = EEPROM.read(250);
 
 char packetBuffer[UDP_TX_PACKET_MAX_SIZE]; //buffer to hold incoming packet,
 
@@ -229,6 +231,29 @@ void OneWireCheck(){
 
 bool UdpSend = false;
 
+void SendConnect()
+{
+#if ISIP == 0
+  Serial.print("Connect ");
+  Serial.println(BoardAdd);
+#else
+  if (UdpSend == false) {
+    UdpSend=true;
+    Udp.beginPacket(ServerIP,ServerPort);  //First send a connect packet to the dynamic IP stored in eeprom
+    Udp.print("Connect ");
+    Udp.print(BoardAdd);
+    Udp.endPacket();
+    if (ServerIP!=HomeseerIP) {
+      Udp.beginPacket(HomeseerIP,ServerPort);  //Then if the stored value doesn't match the pre-specified one, send a connect packet there also
+      Udp.print("Connect ");
+      Udp.print(BoardAdd);
+      Udp.endPacket();
+    }
+    UdpSend=false;
+  }
+#endif
+}
+
 void SendByte(int Data)
 {
 #if ISIP == 0
@@ -292,6 +317,29 @@ void Sendln()
 
 
 //*****************************Data Input********************************
+/*
+
+Used Data Input Cases
+D Disconnect
+r reset
+R Servo set pos
+F PWM Fade Time Set
+P PWM State Set
+K Keepalive
+W OneWire Pin Set
+p PinMode set PWM
+a PinMode AnalogInverted Set
+A PinMode Analog Input Set
+I PinMode Digital Input Set
+O PinMode Output Set
+d Input debounce time set
+S Servo set Pos
+s PinMode Servo set
+C Connect request
+c Connection established - report current status
+X Board PinMode Reset
+*/
+
 void DataEvent() {
 
   if (Byte1 == BoardAdd) {
@@ -307,6 +355,15 @@ void DataEvent() {
 
     case 'c':
       IsConnected = true;
+#if ISIP == 1
+      if (Udp.remoteIP() != ServerIP) {
+        ServerIP=Udp.remoteIP();
+        EEPROM.write(2,ServerIP[0]);
+        EEPROM.write(3,ServerIP[1]);
+        EEPROM.write(4,ServerIP[2]);
+        EEPROM.write(5,ServerIP[3]);
+      }     
+#endif
 
       for (count=0;count<NoOfInPins;count++) { 
         SendByte(BoardAdd);
@@ -413,6 +470,15 @@ void DataEvent() {
       SendChar("Alive ");
       SendByte(BoardAdd);
       Sendln();
+#if ISIP == 1
+      if (Udp.remoteIP() != ServerIP) {
+        ServerIP=Udp.remoteIP();
+        EEPROM.write(2,ServerIP[0]);
+        EEPROM.write(3,ServerIP[1]);
+        EEPROM.write(4,ServerIP[2]);
+        EEPROM.write(5,ServerIP[3]);
+      }     
+#endif
       break; 
 
     case 'P':
@@ -469,6 +535,18 @@ void setup() {
   }
 
 #if ISIP == 1
+  if (EEpromVersion!=22) {
+    ServerIP=HomeseerIP;
+    EEPROM.write(2,ServerIP[0]);
+    EEPROM.write(3,ServerIP[1]);
+    EEPROM.write(4,ServerIP[2]);
+    EEPROM.write(5,ServerIP[3]);
+    EEPROM.write(250,22); //Store the version where the eeprom data layout was last changed
+    EEpromVersion=22;
+  }
+
+
+
   Ethernet.begin(mac,ip);
   Udp.begin(localPort);
   Udp.setTimeout(0);
@@ -478,10 +556,8 @@ void setup() {
   Serial.setTimeout(0);
 #endif
   delay(1000);
-  SendChar("Connect ");
-  SendByte(BoardAdd);
-  Sendln();
   IsConnected = false;
+  SendConnect();
 }
 
 
