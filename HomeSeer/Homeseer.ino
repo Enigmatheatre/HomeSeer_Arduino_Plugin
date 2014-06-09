@@ -71,7 +71,6 @@ void InputCheck(){
     if(millis() - PrevDebounce[count] > Debounce){
       pinread = (digitalRead (InPinArray[count]));
       if (InStateArray[count] != pinread){
-
         InStateArray[count] = pinread;
         PrevDebounce[count] = millis();
         SendByte(BoardAdd); 
@@ -88,9 +87,7 @@ void InputCheck(){
 //*******************************Analogue Setup****************************
 byte  AnalogPinArray[15] = {0};
 int AnalogueDelay[(sizeof(AnalogPinArray) / sizeof(AnalogPinArray[0]))] = {0};
-  
-word AnalogueInvert = 0;  //word = 2 bytes * 8 bits so 16 postitions TODO: base this off of actual maximum number of analog inputs, #/8 then round up
-
+word AnalogueInvert = 0; 
 byte NoOfAnalogPins =0;
 int AnalogStateArray[(sizeof(AnalogPinArray) / sizeof(AnalogPinArray[0]))];
 unsigned long PrevAnalogeMillis[sizeof(AnalogPinArray) / sizeof(AnalogPinArray[0])]; 
@@ -106,7 +103,6 @@ unsigned long PrevAnalogeMillis[sizeof(AnalogPinArray) / sizeof(AnalogPinArray[0
           SendByte(count+1); 
           SendChar(" ");  
           if bitRead(AnalogueInvert,count = 1){
-            // InvertedValue = map(AnalogStateArray[count], 0, 1023, 1023, 0);
             SendByte(map(AnalogStateArray[count], 0, 1023, 1023, 0)); 
             Sendln();
           }
@@ -165,7 +161,6 @@ float Quad_easeInOut(float t, float fixedScaleStart, float fixedScaleEnd){
 
 //*****************************Servo Setup***************************
 #include <Servo.h> 
-//bool UseServo = false;
 byte ServoPinArray[8] = {0};
 byte NoOfServos = 0;
 Servo myservo[(sizeof(ServoPinArray) / sizeof(ServoPinArray[0]) )];
@@ -199,10 +194,8 @@ void OneWireCheck(){
   if (millis() - PrevOneMillis > OneUpdateTime){
     PrevOneMillis = millis();
     sensors.requestTemperatures(); 
-
     for(int i=0;i<sensors.getDeviceCount(); i++)
     {
-
       if(sensors.getAddress(tempDeviceAddress, i)){
         float Temp = sensors.getTempC(tempDeviceAddress);
         if (onewiretemps[i] != Temp){
@@ -218,7 +211,6 @@ void OneWireCheck(){
           SendFloat(Temp);
           Sendln();
         }
-
       }
     }
   }
@@ -364,7 +356,6 @@ void DataEvent() {
         EEPROM.write(5,ServerIP[3]);
       }     
 #endif
-
       for (count=0;count<NoOfInPins;count++) { 
         SendByte(BoardAdd);
         SendChar(" I ");
@@ -396,12 +387,10 @@ void DataEvent() {
     case 's':   
       ServoPinArray[Byte3-1] = Byte4;
       myservo[Byte3-1].attach(Byte4);
-      //      ServoPosArray[count] = 90;
+      //ServoPosArray[count] = 90;
       ServoSpeedArray[Byte3-1] = 0;
-
       if (Byte3 > NoOfServos){
         NoOfServos = Byte3;
-        // UseServo = true;
       }
       break; 
 
@@ -439,7 +428,6 @@ void DataEvent() {
 
     case 'a':
     bitWrite(AnalogueInvert,Byte3-1,Byte4);
-      //AnalogueInvert[Byte3-1] = Byte4;
       break; 
 
     case 'p':
@@ -453,9 +441,7 @@ void DataEvent() {
     case 'W':
       OneWirePin = Byte3;
       EEPROM.write(1,Byte3);
-
       sensors.begin();
-      //numberOfDevices = sensors.getDeviceCount();
       for(int i=0;i<sensors.getDeviceCount(); i++)
       {
         if(sensors.getAddress(tempDeviceAddress, i))
@@ -512,7 +498,6 @@ void DataEvent() {
 void serialEvent() {
   while (Serial.available() > 0) {
     delay(17);
-
     Byte1 = Serial.parseInt();
     Serial.read();  
     Byte2 = Serial.read(); 
@@ -527,7 +512,6 @@ void serialEvent() {
 
 //*****************************Setup Void*********************************
 void setup() {
-
   for (count=0;count<NoOfPwmPins;count++) { 
     PwmFadeTime[count] = 0;
     PwmStateArray[count] = 0;
@@ -544,9 +528,6 @@ void setup() {
     EEPROM.write(250,22); //Store the version where the eeprom data layout was last changed
     EEpromVersion=22;
   }
-
-
-
   Ethernet.begin(mac,ip);
   Udp.begin(localPort);
   Udp.setTimeout(0);
@@ -564,19 +545,15 @@ void setup() {
 
 //*****************************Loop Void*********************************
 void loop() {
-
 #if ISIP == 1
   UDPCheck();
 #endif
-
   if (IsConnected == true)
   {
-
     InputCheck();
     AnalogueCheck();
     PWMCheck();
     ServoCheck();
-   
     if (OneWirePin > 0){  
       OneWireCheck();
     }
