@@ -3,7 +3,7 @@
 
 /********************************************************
  *Arduino to Homeseer 3 Plugin writen by Enigma Theatre.*
- * V1.0.0.22                                            *
+ * V1.0.0.24                                            *
  *                                                      *
  *******Do not Change any values below*******************
  */
