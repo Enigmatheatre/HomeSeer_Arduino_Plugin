@@ -102,7 +102,7 @@ unsigned long PrevAnalogeMillis[sizeof(AnalogPinArray) / sizeof(AnalogPinArray[0
           SendChar(" A ");
           SendByte(count+1); 
           SendChar(" ");  
-          if bitRead(AnalogueInvert,count = 1){
+          if (bitRead(AnalogueInvert,count) == 1){
             SendByte(map(AnalogStateArray[count], 0, 1023, 1023, 0)); 
             Sendln();
           }
