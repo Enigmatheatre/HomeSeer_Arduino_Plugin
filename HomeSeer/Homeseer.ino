@@ -10,7 +10,7 @@
 
 
 //Global Variables
-#define ISIP 0
+#define ISIP 1
 const byte BoardAdd = 1;
 byte Byte1,Byte2,Byte3;
 int Byte4,Byte5;
@@ -25,11 +25,12 @@ void(* resetFunc) (void) = 0;
 #include <SPI.h>       
 #include <Ethernet.h>
 #include <EthernetUdp.h> 
+#include <EthernetBonjour.h>
 
-byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
-IPAddress ip(192,168,0,145);     //IP entered in HS config.
-const unsigned int localPort = 9000;      //port entered in HS config.
-IPAddress HomeseerIP(192,168,0,20); //Homeseer IP address
+byte mac[] = { 0x90, 0xa2, 0xda, 0x0d, 0x6a, 0xcf };
+IPAddress ip(192,168,3,20);     //IP entered in HS config.
+const unsigned int localPort = 8888;      //port entered in HS config.
+IPAddress HomeseerIP(192,168,3,9); //Homeseer IP address
 IPAddress ServerIP(EEPROM.read(2),EEPROM.read(3),EEPROM.read(4),EEPROM.read(5));
 byte EEpromVersion = EEPROM.read(250);
 
@@ -530,7 +531,10 @@ void setup() {
   }
   Ethernet.begin(mac,ip);
   Udp.begin(localPort);
-  Udp.setTimeout(0);
+  EthernetBonjour.begin("arduino");
+  EthernetBonjour.addServiceRecord("Homeseer Arduino Slave._arduino",
+                                   localPort,
+                                   MDNSServiceUDP);
 #else
   Serial.begin(115200);
   Serial.flush();
@@ -547,6 +551,7 @@ void setup() {
 void loop() {
 #if ISIP == 1
   UDPCheck();
+  EthernetBonjour.run();
 #endif
   if (IsConnected == true)
   {
