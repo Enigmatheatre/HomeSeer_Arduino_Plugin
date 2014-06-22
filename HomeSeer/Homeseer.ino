@@ -3,7 +3,7 @@
 
 /********************************************************
  *Arduino to Homeseer 3 Plugin writen by Enigma Theatre.*
- * V1.0.0.24                                            *
+ * V1.0.0.26                                            *
  *                                                      *
  *******Do not Change any values below*******************
  */
@@ -14,7 +14,7 @@
 const byte BoardAdd = 1;
 byte Byte1,Byte2,Byte3;
 int Byte4,Byte5;
-char* Version = "1.0.0.24";
+char* Version = "1.0.0.26";
 bool IsConnected = false;
 void(* resetFunc) (void) = 0; 
 
@@ -314,7 +314,6 @@ void Sendln()
 Used Data Input Cases
 D Disconnect
 r reset
-R Servo set pos
 F PWM Fade Time Set
 P PWM State Set
 K Keepalive
@@ -474,11 +473,7 @@ void DataEvent() {
     case 'F':
       PwmFadeTime[Byte3-1] = Byte4;
       break; 
-
-    case 'R':
-      ServoPosArray[Byte3-1] = Byte4;
-      break; 
-
+      
     case 'r':
       SendChar("Reseting ");
       Sendln();
