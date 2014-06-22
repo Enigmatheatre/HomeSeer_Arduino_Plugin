@@ -314,6 +314,7 @@ void Sendln()
 Used Data Input Cases
 D Disconnect
 r reset
+R Servo set pos
 F PWM Fade Time Set
 P PWM State Set
 K Keepalive
@@ -472,6 +473,10 @@ void DataEvent() {
 
     case 'F':
       PwmFadeTime[Byte3-1] = Byte4;
+      break; 
+
+    case 'R':
+      ServoPosArray[Byte3-1] = Byte4;
       break; 
 
     case 'r':
