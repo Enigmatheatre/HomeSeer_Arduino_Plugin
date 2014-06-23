@@ -93,11 +93,13 @@ int AnalogStateArray[(sizeof(AnalogPinArray) / sizeof(AnalogPinArray[0]))];
 unsigned long PrevAnalogeMillis[sizeof(AnalogPinArray) / sizeof(AnalogPinArray[0])]; 
 
   void  AnalogueCheck(){
+    int pinread;
     for (count=0;count<NoOfAnalogPins;count++) {
       if(millis() - PrevAnalogeMillis[count] > AnalogueDelay[count]) {
         PrevAnalogeMillis[count] = millis(); 
-        if (AnalogStateArray[count] != (analogRead (AnalogPinArray[count]))){
-          AnalogStateArray[count] = (analogRead (AnalogPinArray[count]));
+        pinread = analogRead(AnalogPinArray[count]);
+        if (AnalogStateArray[count] != pinread){
+          AnalogStateArray[count] = pinread;
           SendByte(BoardAdd); 
           SendChar(" A ");
           SendByte(count+1); 
@@ -356,13 +358,15 @@ void DataEvent() {
       }     
 #endif
       for (count=0;count<NoOfInPins;count++) { 
+        int pinread;
+        pinread=digitalRead(InPinArray[count]);
         SendByte(BoardAdd);
         SendChar(" I ");
         SendByte(count+1);
         SendChar(" ");
-        SendByte(digitalRead (InPinArray[count]));
+        SendByte(pinread);
         Sendln();
-        InStateArray[count] = (digitalRead (InPinArray[count]));
+        InStateArray[count] = pinread;
         delay(100);
       }
       break;
