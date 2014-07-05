@@ -3,7 +3,7 @@
 
 /********************************************************
  *Arduino to Homeseer 3 Plugin writen by Enigma Theatre.*
- * V1.0.0.31                                            *
+ * V1.0.0.35                                            *
  *                                                      *
  *******Do not Change any values below*******************
  */
@@ -14,7 +14,7 @@
 const byte BoardAdd = 1;
 byte Byte1,Byte2,Byte3;
 int Byte4,Byte5;
-char* Version = "1.0.0.31";
+char* Version = "1.0.0.35";
 bool IsConnected = false;
 void(* resetFunc) (void) = 0; 
 
@@ -124,8 +124,8 @@ byte NoOfPwmPins = 0;
 int PwmStateArray[(sizeof(PwmPinArray) / sizeof(PwmPinArray[0]))];
 int PwmFadeTime[(sizeof(PwmPinArray) / sizeof(PwmPinArray[0]))];
 byte fadeTarget[(sizeof(PwmPinArray) / sizeof(PwmPinArray[0]))];
-byte fadeValueTweened[(sizeof(PwmPinArray) / sizeof(PwmPinArray[0]))];
-byte fadeValue[(sizeof(PwmPinArray) / sizeof(PwmPinArray[0]))];
+int fadeValueTweened[(sizeof(PwmPinArray) / sizeof(PwmPinArray[0]))];
+int fadeValue[(sizeof(PwmPinArray) / sizeof(PwmPinArray[0]))];
 unsigned long fadeTimerLast[(sizeof(PwmPinArray) / sizeof(PwmPinArray[0]))];
 
 void PWMCheck(){
