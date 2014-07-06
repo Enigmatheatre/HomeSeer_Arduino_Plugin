@@ -3,7 +3,7 @@
 
 /********************************************************
  *Arduino to Homeseer 3 Plugin writen by Enigma Theatre.*
- * V1.0.0.35                                            *
+ * V1.0.0.36                                            *
  *                                                      *
  *******Do not Change any values below*******************
  */
@@ -14,7 +14,7 @@
 const byte BoardAdd = 1;
 byte Byte1,Byte2,Byte3;
 int Byte4,Byte5;
-char* Version = "1.0.0.35";
+char* Version = "1.0.0.36";
 bool IsConnected = false;
 void(* resetFunc) (void) = 0; 
 
@@ -123,7 +123,7 @@ byte PwmPinArray[25] = {0};
 byte NoOfPwmPins = 0;
 int PwmStateArray[(sizeof(PwmPinArray) / sizeof(PwmPinArray[0]))];
 int PwmFadeTime[(sizeof(PwmPinArray) / sizeof(PwmPinArray[0]))];
-byte fadeTarget[(sizeof(PwmPinArray) / sizeof(PwmPinArray[0]))];
+int fadeTarget[(sizeof(PwmPinArray) / sizeof(PwmPinArray[0]))];
 int fadeValueTweened[(sizeof(PwmPinArray) / sizeof(PwmPinArray[0]))];
 int fadeValue[(sizeof(PwmPinArray) / sizeof(PwmPinArray[0]))];
 unsigned long fadeTimerLast[(sizeof(PwmPinArray) / sizeof(PwmPinArray[0]))];
@@ -189,7 +189,7 @@ OneWire oneWire(OneWirePin);
 DallasTemperature sensors(&oneWire);
 DeviceAddress tempDeviceAddress;
 unsigned long PrevOneMillis = 0;
-int OneUpdateTime = 2500;
+int OneUpdateTime = 5000;
 float onewiretemps[15] = {0};
 
 void OneWireCheck(){
