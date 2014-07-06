@@ -3,7 +3,7 @@
 
 /********************************************************
  *Arduino to Homeseer 3 Plugin writen by Enigma Theatre.*
- * V1.0.0.35                                            *
+ * V1.0.0.36                                            *
  *                                                      *
  *******Do not Change any values below*******************
  */
@@ -14,7 +14,7 @@
 const byte BoardAdd = 1;
 byte Byte1,Byte2,Byte3;
 int Byte4,Byte5;
-char* Version = "1.0.0.35";
+char* Version = "1.0.0.36";
 bool IsConnected = false;
 void(* resetFunc) (void) = 0; 
 
@@ -73,12 +73,12 @@ void InputCheck(){
       if (InStateArray[count] != pinread){
         InStateArray[count] = pinread;
         PrevDebounce[count] = millis();
-        SendByte(BoardAdd); 
-        SendChar(" I ");
-        SendByte(count+1); 
-        SendChar(" ");  
-        SendByte(pinread); 
-        Sendln();
+        Send(BoardAdd); 
+        Send(" I ");
+        Send(count+1); 
+        Send(" ");  
+        Send(pinread); 
+        Send();
       }
     }
   }
@@ -100,17 +100,17 @@ unsigned long PrevAnalogeMillis[sizeof(AnalogPinArray) / sizeof(AnalogPinArray[0
         pinread = analogRead(AnalogPinArray[count]);
         if (AnalogStateArray[count] != pinread){
           AnalogStateArray[count] = pinread;
-          SendByte(BoardAdd); 
-          SendChar(" A ");
-          SendByte(count+1); 
-          SendChar(" ");  
+          Send(BoardAdd); 
+          Send(" A ");
+          Send(count+1); 
+          Send(" ");  
           if (bitRead(AnalogueInvert,count) == 1){
-            SendByte(map(AnalogStateArray[count], 0, 1023, 1023, 0)); 
-            Sendln();
+            Send(map(AnalogStateArray[count], 0, 1023, 1023, 0)); 
+            Send();
           }
           else{
-            SendByte(AnalogStateArray[count]);
-            Sendln();
+            Send(AnalogStateArray[count]);
+            Send();
           }
         }
       }
@@ -123,7 +123,7 @@ byte PwmPinArray[25] = {0};
 byte NoOfPwmPins = 0;
 int PwmStateArray[(sizeof(PwmPinArray) / sizeof(PwmPinArray[0]))];
 int PwmFadeTime[(sizeof(PwmPinArray) / sizeof(PwmPinArray[0]))];
-byte fadeTarget[(sizeof(PwmPinArray) / sizeof(PwmPinArray[0]))];
+int fadeTarget[(sizeof(PwmPinArray) / sizeof(PwmPinArray[0]))];
 int fadeValueTweened[(sizeof(PwmPinArray) / sizeof(PwmPinArray[0]))];
 int fadeValue[(sizeof(PwmPinArray) / sizeof(PwmPinArray[0]))];
 unsigned long fadeTimerLast[(sizeof(PwmPinArray) / sizeof(PwmPinArray[0]))];
@@ -202,16 +202,16 @@ void OneWireCheck(){
         float Temp = sensors.getTempC(tempDeviceAddress);
         if (onewiretemps[i] != Temp){
           onewiretemps[i] = Temp;              
-          SendByte(BoardAdd);
-          SendChar(" Rom ");
+          Send(BoardAdd);
+          Send(" Rom ");
           for (uint8_t i = 0; i < 8; i++)
           {
-            if (tempDeviceAddress[i] < 16) SendChar("0");
-            SendByte(tempDeviceAddress[i]);
+            if (tempDeviceAddress[i] < 16) Send("0");
+            Send(tempDeviceAddress[i]);
           }
-          SendChar(" ");
-          SendFloat(Temp);
-          Sendln();
+          Send(" ");
+          Send(Temp);
+          Send();
         }
       }
     }
@@ -248,7 +248,22 @@ void SendConnect()
 #endif
 }
 
-void SendByte(int Data)
+void Send(byte Data)
+{
+#if ISIP == 0
+  Serial.print(Data);
+#else 
+  if (UdpSend == false){
+    UdpSend = true;
+    Udp.beginPacket(Udp.remoteIP(), ServerPort);
+    Udp.print(Data);
+  }
+  else{
+    Udp.print(Data);
+  }
+#endif
+}
+void Send(long Data)
 {
 #if ISIP == 0
   Serial.print(Data);
@@ -264,7 +279,23 @@ void SendByte(int Data)
 #endif
 }
 
-void SendChar(char* Data)
+void Send(int Data)
+{
+#if ISIP == 0
+  Serial.print(Data);
+#else 
+  if (UdpSend == false){
+    UdpSend = true;
+    Udp.beginPacket(Udp.remoteIP(), ServerPort);
+    Udp.print(Data);
+  }
+  else{
+    Udp.print(Data);
+  }
+#endif
+}
+
+void Send(char* Data)
 {
 #if ISIP == 0
   Serial.print(Data);
@@ -281,7 +312,7 @@ void SendChar(char* Data)
 }
 
 
-void SendFloat(float Data)
+void Send(float Data)
 {
 #if ISIP == 0
   Serial.print(Data);
@@ -297,7 +328,7 @@ void SendFloat(float Data)
 #endif
 }
 
-void Sendln()
+void Send()
 {
 #if ISIP == 0
   Serial.println();
@@ -360,28 +391,28 @@ void DataEvent() {
       for (count=0;count<NoOfInPins;count++) { 
         int pinread;
         pinread=digitalRead(InPinArray[count]);
-        SendByte(BoardAdd);
-        SendChar(" I ");
-        SendByte(count+1);
-        SendChar(" ");
-        SendByte(pinread);
-        Sendln();
+        Send(BoardAdd);
+        Send(" I ");
+        Send(count+1);
+        Send(" ");
+        Send(pinread);
+        Send();
         InStateArray[count] = pinread;
         delay(100);
       }
       break;
 
     case 'C':
-      SendChar("Version ");
-      SendByte(BoardAdd);
-      SendChar(" ");
-      SendChar(Version);
-      SendChar(" HS3");
-      Sendln();
+      Send("Version ");
+      Send(BoardAdd);
+      Send(" ");
+      Send(Version);
+      Send(" HS3");
+      Send();
       delay(100);
-      SendChar("Connected ");
-      SendByte(BoardAdd);
-      Sendln();
+      Send("Connected ");
+      Send(BoardAdd);
+      Send();
       delay(100);
       IsConnected = false;
       break;
@@ -456,9 +487,9 @@ void DataEvent() {
 
     case 'K':
       delay(200);
-      SendChar("Alive ");
-      SendByte(BoardAdd);
-      Sendln();
+      Send("Alive ");
+      Send(BoardAdd);
+      Send();
 #if ISIP == 1
       if (Udp.remoteIP() != ServerIP) {
         ServerIP=Udp.remoteIP();
@@ -479,8 +510,8 @@ void DataEvent() {
       break; 
       
     case 'r':
-      SendChar("Reseting ");
-      Sendln();
+      Send("Reseting ");
+      Send();
       delay(200);
       resetFunc();  //call reset
       break; 
