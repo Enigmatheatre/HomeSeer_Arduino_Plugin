@@ -189,7 +189,7 @@ OneWire oneWire(OneWirePin);
 DallasTemperature sensors(&oneWire);
 DeviceAddress tempDeviceAddress;
 unsigned long PrevOneMillis = 0;
-int OneUpdateTime = 2500;
+int OneUpdateTime = 5000;
 float onewiretemps[15] = {0};
 
 void OneWireCheck(){
