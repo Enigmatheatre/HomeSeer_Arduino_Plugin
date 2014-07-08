@@ -3,7 +3,7 @@
 
 /********************************************************
  *Arduino to Homeseer 3 Plugin writen by Enigma Theatre.*
- * V1.0.0.36                                            *
+ * V1.0.0.37                                            *
  *                                                      *
  *******Do not Change any values below*******************
  */
@@ -14,9 +14,10 @@
 const byte BoardAdd = 1;
 byte Byte1,Byte2,Byte3;
 int Byte4,Byte5;
-char* Version = "1.0.0.36";
+char* Version = "1.0.0.37";
 bool IsConnected = false;
 void(* resetFunc) (void) = 0; 
+byte EEpromVersion = EEPROM.read(250);
 
 
 //******************************Ethernet Setup*****************************
@@ -31,7 +32,6 @@ IPAddress ip(192,168,0,145);     //IP entered in HS config.
 const unsigned int localPort = 9000;      //port entered in HS config.
 IPAddress HomeseerIP(192,168,0,20); //Homeseer IP address
 IPAddress ServerIP(EEPROM.read(2),EEPROM.read(3),EEPROM.read(4),EEPROM.read(5));
-byte EEpromVersion = EEPROM.read(250);
 
 char packetBuffer[UDP_TX_PACKET_MAX_SIZE]; //buffer to hold incoming packet,
 
@@ -184,37 +184,43 @@ void ServoCheck(){
 #include <OneWire.h>
 #include <DallasTemperature.h>
 byte OneWirePin = EEPROM.read(1);
-#define TEMPERATURE_PRECISION 9
+byte TEMPERATURE_PRECISION = EEPROM.read(6);
 OneWire oneWire(OneWirePin);
 DallasTemperature sensors(&oneWire);
 DeviceAddress tempDeviceAddress;
 unsigned long PrevOneMillis = 0;
-int OneUpdateTime = 5000;
-float onewiretemps[15] = {0};
+int OneUpdateTime = 1000;
+unsigned long lastTempRequest = 0;
+int conversionDelay = 0;
+bool  waitingForTempsGlobal = false;
+bool needReboot = false;
+float Temps[15] = {0};
 
 void OneWireCheck(){
-  if (millis() - PrevOneMillis > OneUpdateTime){
-    PrevOneMillis = millis();
-    sensors.requestTemperatures(); 
-    for(int i=0;i<sensors.getDeviceCount(); i++)
-    {
-      if(sensors.getAddress(tempDeviceAddress, i)){
-        float Temp = sensors.getTempC(tempDeviceAddress);
-        if (onewiretemps[i] != Temp){
-          onewiretemps[i] = Temp;              
-          SendByte(BoardAdd);
-          SendChar(" Rom ");
-          for (uint8_t i = 0; i < 8; i++)
-          {
-            if (tempDeviceAddress[i] < 16) SendChar("0");
-            SendByte(tempDeviceAddress[i]);
+    if (waitingForTempsGlobal && millis() - lastTempRequest >=  conversionDelay ) {
+      for(int i=0;i<sensors.getDeviceCount(); i++)  {
+          sensors.getAddress(tempDeviceAddress, i);
+          float Temp = sensors.getTempC(tempDeviceAddress);
+          if (Temps[i] != Temp) {
+            SendByte(BoardAdd);
+            SendChar(" Rom ");
+            for (uint8_t i = 0; i < 8; i++)
+              {
+              if (tempDeviceAddress[i] < 16) SendChar("0");
+              SendByte(tempDeviceAddress[i]);
+              }
+            SendChar(" ");
+            SendFloat(Temp);
+            Sendln();
           }
-          SendChar(" ");
-          SendFloat(Temp);
-          Sendln();
-        }
       }
+  lastTempRequest=millis();
+  waitingForTempsGlobal =false;
     }
+  if (!waitingForTempsGlobal && millis() - lastTempRequest > OneUpdateTime){
+    lastTempRequest = millis();
+    waitingForTempsGlobal =true;
+    sensors.requestTemperatures(); 
   }
 }
 //******************************************************************************
@@ -442,16 +448,22 @@ void DataEvent() {
       break;   
 
     case 'W':
-      OneWirePin = Byte3;
-      EEPROM.write(1,Byte3);
+      if (OneWirePin != Byte3) {
+          OneWirePin = Byte3;
+          EEPROM.write(1,OneWirePin);
+          needReboot = true;
+          }
+      if (TEMPERATURE_PRECISION != Byte4) {
+        TEMPERATURE_PRECISION = Byte4;
+        EEPROM.write(6,TEMPERATURE_PRECISION);
+        needReboot  = true;
+         }
+      if (needReboot) { resetFunc(); }
       sensors.begin();
-      for(int i=0;i<sensors.getDeviceCount(); i++)
-      {
-        if(sensors.getAddress(tempDeviceAddress, i))
-        {
-          sensors.setResolution(tempDeviceAddress, TEMPERATURE_PRECISION);
-        }
-      }
+      sensors.setResolution(TEMPERATURE_PRECISION);
+      sensors.setWaitForConversion(false);
+      if (sensors.isParasitePowerMode()) { sensors.setCheckForConversion(false); }
+
       break; 
 
     case 'K':
@@ -516,25 +528,48 @@ void setup() {
     PwmStateArray[count] = 0;
     fadeValue[count] = 0;
   }
+//*****************************EEPROM Setup******************************
+
+  //***************************End EEPROM Setup
+     switch (TEMPERATURE_PRECISION)
+    {
+    case 9:
+        conversionDelay = 94;
+    case 10:
+        conversionDelay = 188;
+    case 11:
+        conversionDelay = 375;
+    case 12:
+        conversionDelay = 750;
+    }
+
 
 #if ISIP == 1
-  if (EEpromVersion!=22) {
+  if (EEpromVersion!=22 && EEpromVersion != 37) {
     ServerIP=HomeseerIP;
     EEPROM.write(2,ServerIP[0]);
     EEPROM.write(3,ServerIP[1]);
     EEPROM.write(4,ServerIP[2]);
     EEPROM.write(5,ServerIP[3]);
-    EEPROM.write(250,22); //Store the version where the eeprom data layout was last changed
-    EEpromVersion=22;
+     EEpromVersion=22;
+ }
+  if (EEpromVersion == 22) {
+    EEPROM.write(6,9);
+    EEpromVersion=37;
   }
   Ethernet.begin(mac,ip);
   Udp.begin(localPort);
   Udp.setTimeout(0);
 #else
+  if (EEpromVersion != 37) {
+    EEPROM.write(6,9);
+    EEpromVersion=37;
+  }
   Serial.begin(115200);
   Serial.flush();
   Serial.setTimeout(0);
 #endif
+  EEPROM.write(250,EEpromVersion); //Store the version where the eeprom data layout was last changed
   delay(1000);
   IsConnected = false;
   SendConnect();
