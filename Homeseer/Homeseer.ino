@@ -188,10 +188,9 @@ byte TEMPERATURE_PRECISION = EEPROM.read(6);
 OneWire oneWire(OneWirePin);
 DallasTemperature sensors(&oneWire);
 DeviceAddress tempDeviceAddress;
-unsigned long PrevOneMillis = 0;
-int OneUpdateTime = 1000;
+int OneUpdateTime = 1500;
 unsigned long lastTempRequest = 0;
-int conversionDelay = 0;
+int conversionDelay = 900;
 bool  waitingForTempsGlobal = false;
 bool needReboot = false;
 float Temps[15] = {0};
@@ -214,8 +213,7 @@ void OneWireCheck(){
             Send();
           }
       }
-  lastTempRequest=millis();
-  waitingForTempsGlobal =false;
+    waitingForTempsGlobal =false;
     }
   if (!waitingForTempsGlobal && millis() - lastTempRequest > OneUpdateTime){
     lastTempRequest = millis();
