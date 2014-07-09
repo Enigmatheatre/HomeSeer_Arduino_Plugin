@@ -184,7 +184,7 @@ void ServoCheck(){
 #include <OneWire.h>
 #include <DallasTemperature.h>
 byte OneWirePin = EEPROM.read(1);
-#define TEMPERATURE_PRECISION 9
+byte TEMPERATURE_PRECISION = EEPROM.read(6);
 OneWire oneWire(OneWirePin);
 DallasTemperature sensors(&oneWire);
 DeviceAddress tempDeviceAddress;
