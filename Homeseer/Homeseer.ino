@@ -201,7 +201,7 @@ void OneWireCheck(){
           sensors.getAddress(tempDeviceAddress, i);
           float Temp = sensors.getTempC(tempDeviceAddress);
           if (Temps[i] != Temp && sensors.validAddress(tempDeviceAddress)) {
-            Temps[i] = Temp
+            Temps[i] = Temp;
             Send(BoardAdd);
             Send(" Rom ");
             for (uint8_t i = 0; i < 8; i++)
