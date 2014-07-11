@@ -3,7 +3,7 @@
 
 /********************************************************
  *Arduino to Homeseer 3 Plugin writen by Enigma Theatre.*
- * V1.0.0.36                                            *
+ * V1.0.0.37                                            *
  *                                                      *
  *******Do not Change any values below*******************
  */
@@ -14,9 +14,10 @@
 const byte BoardAdd = 1;
 byte Byte1,Byte2,Byte3;
 int Byte4,Byte5;
-char* Version = "1.0.0.36";
+char* Version = "1.0.0.37";
 bool IsConnected = false;
 void(* resetFunc) (void) = 0; 
+byte EEpromVersion = EEPROM.read(250);
 
 
 //******************************Ethernet Setup*****************************
@@ -31,7 +32,6 @@ IPAddress ip(192,168,0,145);     //IP entered in HS config.
 const unsigned int localPort = 9000;      //port entered in HS config.
 IPAddress HomeseerIP(192,168,0,20); //Homeseer IP address
 IPAddress ServerIP(EEPROM.read(2),EEPROM.read(3),EEPROM.read(4),EEPROM.read(5));
-byte EEpromVersion = EEPROM.read(250);
 
 char packetBuffer[UDP_TX_PACKET_MAX_SIZE]; //buffer to hold incoming packet,
 
@@ -73,12 +73,12 @@ void InputCheck(){
       if (InStateArray[count] != pinread){
         InStateArray[count] = pinread;
         PrevDebounce[count] = millis();
-        SendByte(BoardAdd); 
-        SendChar(" I ");
-        SendByte(count+1); 
-        SendChar(" ");  
-        SendByte(pinread); 
-        Sendln();
+        Send(BoardAdd); 
+        Send(" I ");
+        Send(count+1); 
+        Send(" ");  
+        Send(pinread); 
+        Send();
       }
     }
   }
@@ -100,17 +100,17 @@ unsigned long PrevAnalogeMillis[sizeof(AnalogPinArray) / sizeof(AnalogPinArray[0
         pinread = analogRead(AnalogPinArray[count]);
         if (AnalogStateArray[count] != pinread){
           AnalogStateArray[count] = pinread;
-          SendByte(BoardAdd); 
-          SendChar(" A ");
-          SendByte(count+1); 
-          SendChar(" ");  
+          Send(BoardAdd); 
+          Send(" A ");
+          Send(count+1); 
+          Send(" ");  
           if (bitRead(AnalogueInvert,count) == 1){
-            SendByte(map(AnalogStateArray[count], 0, 1023, 1023, 0)); 
-            Sendln();
+            Send(map(AnalogStateArray[count], 0, 1023, 1023, 0)); 
+            Send();
           }
           else{
-            SendByte(AnalogStateArray[count]);
-            Sendln();
+            Send(AnalogStateArray[count]);
+            Send();
           }
         }
       }
@@ -184,37 +184,42 @@ void ServoCheck(){
 #include <OneWire.h>
 #include <DallasTemperature.h>
 byte OneWirePin = EEPROM.read(1);
-#define TEMPERATURE_PRECISION 9
+byte TEMPERATURE_PRECISION = EEPROM.read(6);
 OneWire oneWire(OneWirePin);
 DallasTemperature sensors(&oneWire);
 DeviceAddress tempDeviceAddress;
-unsigned long PrevOneMillis = 0;
-int OneUpdateTime = 5000;
-float onewiretemps[15] = {0};
+int OneUpdateTime = 1500;
+unsigned long lastTempRequest = 0;
+int conversionDelay = 900;
+bool  waitingForTempsGlobal = false;
+bool needReboot = false;
+float Temps[15] = {0};
 
 void OneWireCheck(){
-  if (millis() - PrevOneMillis > OneUpdateTime){
-    PrevOneMillis = millis();
-    sensors.requestTemperatures(); 
-    for(int i=0;i<sensors.getDeviceCount(); i++)
-    {
-      if(sensors.getAddress(tempDeviceAddress, i)){
-        float Temp = sensors.getTempC(tempDeviceAddress);
-        if (onewiretemps[i] != Temp){
-          onewiretemps[i] = Temp;              
-          SendByte(BoardAdd);
-          SendChar(" Rom ");
-          for (uint8_t i = 0; i < 8; i++)
-          {
-            if (tempDeviceAddress[i] < 16) SendChar("0");
-            SendByte(tempDeviceAddress[i]);
+    if (waitingForTempsGlobal && millis() - lastTempRequest >=  conversionDelay ) {
+      for(int i=0;i<sensors.getDeviceCount(); i++)  {
+          sensors.getAddress(tempDeviceAddress, i);
+          float Temp = sensors.getTempC(tempDeviceAddress);
+          if (Temps[i] != Temp && sensors.validAddress(tempDeviceAddress)) {
+            Temps[i] = Temp
+            Send(BoardAdd);
+            Send(" Rom ");
+            for (uint8_t i = 0; i < 8; i++)
+              {
+              if (tempDeviceAddress[i] < 16) Send("0");
+              Send(tempDeviceAddress[i]);
+              }
+            Send(" ");
+            Send(Temp);
+            Send();
           }
-          SendChar(" ");
-          SendFloat(Temp);
-          Sendln();
-        }
       }
+    waitingForTempsGlobal =false;
     }
+  if (!waitingForTempsGlobal && millis() - lastTempRequest > OneUpdateTime){
+    lastTempRequest = millis();
+    waitingForTempsGlobal =true;
+    sensors.requestTemperatures(); 
   }
 }
 //******************************************************************************
@@ -248,7 +253,22 @@ void SendConnect()
 #endif
 }
 
-void SendByte(int Data)
+void Send(byte Data)
+{
+#if ISIP == 0
+  Serial.print(Data);
+#else 
+  if (UdpSend == false){
+    UdpSend = true;
+    Udp.beginPacket(Udp.remoteIP(), ServerPort);
+    Udp.print(Data);
+  }
+  else{
+    Udp.print(Data);
+  }
+#endif
+}
+void Send(long Data)
 {
 #if ISIP == 0
   Serial.print(Data);
@@ -264,7 +284,23 @@ void SendByte(int Data)
 #endif
 }
 
-void SendChar(char* Data)
+void Send(int Data)
+{
+#if ISIP == 0
+  Serial.print(Data);
+#else 
+  if (UdpSend == false){
+    UdpSend = true;
+    Udp.beginPacket(Udp.remoteIP(), ServerPort);
+    Udp.print(Data);
+  }
+  else{
+    Udp.print(Data);
+  }
+#endif
+}
+
+void Send(char* Data)
 {
 #if ISIP == 0
   Serial.print(Data);
@@ -281,7 +317,7 @@ void SendChar(char* Data)
 }
 
 
-void SendFloat(float Data)
+void Send(float Data)
 {
 #if ISIP == 0
   Serial.print(Data);
@@ -297,7 +333,7 @@ void SendFloat(float Data)
 #endif
 }
 
-void Sendln()
+void Send()
 {
 #if ISIP == 0
   Serial.println();
@@ -360,28 +396,28 @@ void DataEvent() {
       for (count=0;count<NoOfInPins;count++) { 
         int pinread;
         pinread=digitalRead(InPinArray[count]);
-        SendByte(BoardAdd);
-        SendChar(" I ");
-        SendByte(count+1);
-        SendChar(" ");
-        SendByte(pinread);
-        Sendln();
+        Send(BoardAdd);
+        Send(" I ");
+        Send(count+1);
+        Send(" ");
+        Send(pinread);
+        Send();
         InStateArray[count] = pinread;
         delay(100);
       }
       break;
 
     case 'C':
-      SendChar("Version ");
-      SendByte(BoardAdd);
-      SendChar(" ");
-      SendChar(Version);
-      SendChar(" HS3");
-      Sendln();
+      Send("Version ");
+      Send(BoardAdd);
+      Send(" ");
+      Send(Version);
+      Send(" HS3");
+      Send();
       delay(100);
-      SendChar("Connected ");
-      SendByte(BoardAdd);
-      Sendln();
+      Send("Connected ");
+      Send(BoardAdd);
+      Send();
       delay(100);
       IsConnected = false;
       break;
@@ -442,23 +478,29 @@ void DataEvent() {
       break;   
 
     case 'W':
-      OneWirePin = Byte3;
-      EEPROM.write(1,Byte3);
+      if (OneWirePin != Byte3) {
+          OneWirePin = Byte3;
+          EEPROM.write(1,OneWirePin);
+          needReboot = true;
+          }
+      if (TEMPERATURE_PRECISION != Byte4) {
+        TEMPERATURE_PRECISION = Byte4;
+        EEPROM.write(6,TEMPERATURE_PRECISION);
+        needReboot  = true;
+         }
+      if (needReboot) { resetFunc(); }
       sensors.begin();
-      for(int i=0;i<sensors.getDeviceCount(); i++)
-      {
-        if(sensors.getAddress(tempDeviceAddress, i))
-        {
-          sensors.setResolution(tempDeviceAddress, TEMPERATURE_PRECISION);
-        }
-      }
+      sensors.setResolution(TEMPERATURE_PRECISION);
+      sensors.setWaitForConversion(false);
+      if (sensors.isParasitePowerMode()) { sensors.setCheckForConversion(false); }
+
       break; 
 
     case 'K':
       delay(200);
-      SendChar("Alive ");
-      SendByte(BoardAdd);
-      Sendln();
+      Send("Alive ");
+      Send(BoardAdd);
+      Send();
 #if ISIP == 1
       if (Udp.remoteIP() != ServerIP) {
         ServerIP=Udp.remoteIP();
@@ -479,8 +521,8 @@ void DataEvent() {
       break; 
       
     case 'r':
-      SendChar("Reseting ");
-      Sendln();
+      Send("Reseting ");
+      Send();
       delay(200);
       resetFunc();  //call reset
       break; 
@@ -516,25 +558,48 @@ void setup() {
     PwmStateArray[count] = 0;
     fadeValue[count] = 0;
   }
+//*****************************EEPROM Setup******************************
+
+  //***************************End EEPROM Setup
+     switch (TEMPERATURE_PRECISION)
+    {
+    case 9:
+        conversionDelay = 94;
+    case 10:
+        conversionDelay = 188;
+    case 11:
+        conversionDelay = 375;
+    case 12:
+        conversionDelay = 750;
+    }
+
 
 #if ISIP == 1
-  if (EEpromVersion!=22) {
+  if (EEpromVersion!=22 && EEpromVersion != 37) {
     ServerIP=HomeseerIP;
     EEPROM.write(2,ServerIP[0]);
     EEPROM.write(3,ServerIP[1]);
     EEPROM.write(4,ServerIP[2]);
     EEPROM.write(5,ServerIP[3]);
-    EEPROM.write(250,22); //Store the version where the eeprom data layout was last changed
-    EEpromVersion=22;
+     EEpromVersion=22;
+ }
+  if (EEpromVersion == 22) {
+    EEPROM.write(6,9);
+    EEpromVersion=37;
   }
   Ethernet.begin(mac,ip);
   Udp.begin(localPort);
   Udp.setTimeout(0);
 #else
+  if (EEpromVersion != 37) {
+    EEPROM.write(6,9);
+    EEpromVersion=37;
+  }
   Serial.begin(115200);
   Serial.flush();
   Serial.setTimeout(0);
 #endif
+  EEPROM.write(250,EEpromVersion); //Store the version where the eeprom data layout was last changed
   delay(1000);
   IsConnected = false;
   SendConnect();
