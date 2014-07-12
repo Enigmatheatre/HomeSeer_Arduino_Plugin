@@ -194,13 +194,15 @@ int conversionDelay = 900;
 bool  waitingForTempsGlobal = false;
 bool needReboot = false;
 float Temps[15] = {0};
+unsigned long lastUpdated[15] = {0};
+const int minUpdateTime = 8000;
 
 void OneWireCheck(){
     if (waitingForTempsGlobal && millis() - lastTempRequest >=  conversionDelay ) {
       for(int i=0;i<sensors.getDeviceCount(); i++)  {
           sensors.getAddress(tempDeviceAddress, i);
           float Temp = sensors.getTempC(tempDeviceAddress);
-          if (Temps[i] != Temp && sensors.validAddress(tempDeviceAddress)) {
+          if ((Temps[i] != Temp || millis() - lastUpdated[i] >= minUpdateTime) && sensors.validAddress(tempDeviceAddress)) {
             Temps[i] = Temp;
             Send(BoardAdd);
             Send(" Rom ");
@@ -212,6 +214,7 @@ void OneWireCheck(){
             Send(" ");
             Send(Temp);
             Send();
+            lastUpdated[i]=millis();
           }
       }
     waitingForTempsGlobal =false;
