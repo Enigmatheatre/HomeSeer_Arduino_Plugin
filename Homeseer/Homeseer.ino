@@ -3,7 +3,7 @@
 
 /********************************************************
  *Arduino to Homeseer 3 Plugin writen by Enigma Theatre.*
- * V1.0.0.37                                            *
+ * V1.0.0.40                                            *
  *                                                      *
  *******Do not Change any values below*******************
  */
@@ -14,7 +14,7 @@
 const byte BoardAdd = 1;
 byte Byte1,Byte2,Byte3;
 int Byte4,Byte5;
-char* Version = "1.0.0.37";
+char* Version = "1.0.0.40";
 bool IsConnected = false;
 void(* resetFunc) (void) = 0; 
 byte EEpromVersion = EEPROM.read(250);
@@ -195,7 +195,7 @@ bool  waitingForTempsGlobal = false;
 bool needReboot = false;
 float Temps[15] = {0};
 unsigned long lastUpdated[15] = {0};
-const int minUpdateTime = 8000;
+const int minUpdateTime = 60000;
 
 void OneWireCheck(){
     if (waitingForTempsGlobal && millis() - lastTempRequest >=  conversionDelay ) {
