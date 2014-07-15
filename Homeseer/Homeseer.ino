@@ -195,7 +195,7 @@ bool  waitingForTempsGlobal = false;
 bool needReboot = false;
 float Temps[15] = {0};
 unsigned long lastUpdated[15] = {0};
-const int minUpdateTime = 60000;
+const word minUpdateTime = 60000;
 
 void OneWireCheck(){
     if (waitingForTempsGlobal && millis() - lastTempRequest >=  conversionDelay ) {
