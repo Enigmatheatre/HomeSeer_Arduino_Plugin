@@ -10,7 +10,7 @@
 #endif
 /************************************************************
  *Arduino to Homeseer 3 Plugin API writen by Enigma Theatre.*
- * V1.0.0.40                                                *
+ * V1.0.0.42                                                *
  *                                                          *
  *******Change the values below only*************************
  */
@@ -141,7 +141,7 @@ void loop() {
 
 
 
-const char* Version = "API1.0.0.40";
+const char* Version = "API1.0.0.42";
 
 byte Byte1,Byte2,Byte3;
 int Byte4,Byte5;
