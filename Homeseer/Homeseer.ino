@@ -11,6 +11,7 @@
 
 //Global Variables
 #define ISIP 0
+#define USE_DHCP 0 //On the UNO, enabling this increases the sketch by 3,124 Bytes and Memory usage by 112 Bytes. 
 const byte BoardAdd = 1;
 byte Byte1,Byte2,Byte3;
 int Byte4,Byte5;
@@ -28,7 +29,9 @@ byte EEpromVersion = EEPROM.read(250);
 #include <EthernetUdp.h> 
 
 byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
+#if USE_DHCP == 0
 IPAddress ip(192,168,0,145);     //IP entered in HS config.
+#endif
 const unsigned int localPort = 9000;      //port entered in HS config.
 IPAddress HomeseerIP(192,168,0,20); //Homeseer IP address
 IPAddress ServerIP(EEPROM.read(2),EEPROM.read(3),EEPROM.read(4),EEPROM.read(5));
@@ -576,6 +579,11 @@ void setup() {
         conversionDelay = 750;
     }
 
+  #if ISIP == 1 && USE_DHCP == 1
+    Ethernet.begin(mac);
+  #elif ISIP == 1 && USE_DHCP == 0
+    Ethernet.begin(mac,ip);
+  #endif
 
 #if ISIP == 1
   if (EEpromVersion!=22 && EEpromVersion != 37) {
@@ -590,7 +598,6 @@ void setup() {
     EEPROM.write(6,9);
     EEpromVersion=37;
   }
-  Ethernet.begin(mac,ip);
   Udp.begin(localPort);
   Udp.setTimeout(0);
 #else
