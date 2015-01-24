@@ -141,7 +141,7 @@ void loop() {
 
 
 
-const char* Version = "API1.0.0.42";
+const char* Version = "API1.0.0.66";
 
 byte Byte1,Byte2,Byte3;
 int Byte4,Byte5;
@@ -348,5 +348,6 @@ if (IsConnected == true) {
 #endif
 }
 }
+
 
 

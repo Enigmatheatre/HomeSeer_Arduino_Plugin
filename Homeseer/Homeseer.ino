@@ -2,9 +2,9 @@
 
 
 /********************************************************
- *Arduino to Homeseer 3 Plugin writen by Enigma Theatre.*
- * V1.0.0.42                                            *
- *                                                      *
+ *Arduino to Homeseer 3 Plugin written by Enigma Theatre.*
+ * V1.0.0.67                                             *
+ *                                                       *
  *******Do not Change any values below*******************
  */
 
@@ -14,11 +14,12 @@
 const byte BoardAdd = 1;
 byte Byte1,Byte2,Byte3;
 int Byte4,Byte5;
-char* Version = "1.0.0.42";
+char* Version = "1.0.0.67";
 bool IsConnected = false;
 void(* resetFunc) (void) = 0; 
 byte EEpromVersion = EEPROM.read(250);
-
+int AlivePin = -1;
+long LastAlive = 0;
 
 //******************************Ethernet Setup*****************************
 #if ISIP == 1
@@ -227,7 +228,23 @@ void OneWireCheck(){
 }
 //******************************************************************************
 
+//**********************************Alive Check***********************************
 
+void AliveCheck(){
+  
+  if (AlivePin > -1 ){
+    if(millis() - LastAlive < 40000 && IsConnected == true){
+    // LastAlive = millis();
+  digitalWrite(AlivePin, HIGH); 
+  }
+  else{
+  digitalWrite(AlivePin, LOW); 
+  }
+}
+}
+  
+  
+//******************************************************************************
 
 //**********************************Send Data***********************************
 
@@ -362,6 +379,7 @@ W OneWire Pin Set
 p PinMode set PWM
 a PinMode AnalogInverted Set
 A PinMode Analog Input Set
+H PinMode Alive
 I PinMode Digital Input Set
 O PinMode Output Set
 d Input debounce time set
@@ -375,7 +393,8 @@ X Board PinMode Reset
 void DataEvent() {
 
   if (Byte1 == BoardAdd) {
-
+    LastAlive = millis();
+    
     switch (Byte2) {
 
     case 'X':
@@ -449,6 +468,11 @@ void DataEvent() {
       digitalWrite(Byte3, Byte4);
       break; 
 
+    case 'H':
+      pinMode(Byte3, OUTPUT);
+      AlivePin = Byte3;
+      break; 
+      
     case 'I':
       pinMode(Byte4, INPUT);
       digitalWrite(Byte4, HIGH); 
@@ -615,6 +639,7 @@ void loop() {
 #if ISIP == 1
   UDPCheck();
 #endif
+ AliveCheck();
   if (IsConnected == true)
   {
     InputCheck();
