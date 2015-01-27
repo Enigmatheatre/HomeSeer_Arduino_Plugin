@@ -3,7 +3,7 @@
 
 /********************************************************
  *Arduino to Homeseer 3 Plugin written by Enigma Theatre.*
- * V1.0.0.67                                             *
+ * V1.0.0.69                                             *
  *                                                       *
  *******Do not Change any values below*******************
  */
@@ -14,13 +14,13 @@
 const byte BoardAdd = 1;
 byte Byte1,Byte2,Byte3;
 int Byte4,Byte5;
-char* Version = "1.0.0.67";
+char* Version = "1.0.0.69";
 bool IsConnected = false;
 void(* resetFunc) (void) = 0; 
 byte EEpromVersion = EEPROM.read(250);
 int AlivePin = -1;
-long LastAlive = 0;
-
+unsigned long LastAlive = 0;
+bool WaitForAck = false;
 //******************************Ethernet Setup*****************************
 #if ISIP == 1
 
@@ -71,7 +71,7 @@ void InputCheck(){
   for (count=0;count<NoOfInPins;count++) {
     if(millis() - PrevDebounce[count] > Debounce){
       pinread = (digitalRead (InPinArray[count]));
-      if (InStateArray[count] != pinread){
+      if (InStateArray[count] != pinread && WaitForAck == false){
         InStateArray[count] = pinread;
         PrevDebounce[count] = millis();
         Send(BoardAdd); 
@@ -80,6 +80,7 @@ void InputCheck(){
         Send(" ");  
         Send(pinread); 
         Send();
+        WaitForAck == true;
       }
     }
   }
@@ -99,7 +100,7 @@ unsigned long PrevAnalogeMillis[sizeof(AnalogPinArray) / sizeof(AnalogPinArray[0
       if(millis() - PrevAnalogeMillis[count] > AnalogueDelay[count]) {
         PrevAnalogeMillis[count] = millis(); 
         pinread = analogRead(AnalogPinArray[count]);
-        if (AnalogStateArray[count] != pinread){
+        if (AnalogStateArray[count] != pinread && WaitForAck == false){
           AnalogStateArray[count] = pinread;
           Send(BoardAdd); 
           Send(" A ");
@@ -108,10 +109,12 @@ unsigned long PrevAnalogeMillis[sizeof(AnalogPinArray) / sizeof(AnalogPinArray[0
           if (bitRead(AnalogueInvert,count) == 1){
             Send(map(AnalogStateArray[count], 0, 1023, 1023, 0)); 
             Send();
+             WaitForAck == true;
           }
           else{
             Send(AnalogStateArray[count]);
             Send();
+             WaitForAck == true;
           }
         }
       }
@@ -203,7 +206,7 @@ void OneWireCheck(){
       for(int i=0;i<sensors.getDeviceCount(); i++)  {
           sensors.getAddress(tempDeviceAddress, i);
           float Temp = sensors.getTempC(tempDeviceAddress);
-          if ((Temps[i] != Temp || millis() - lastUpdated[i] >= minUpdateTime) && sensors.validAddress(tempDeviceAddress)) {
+          if ((Temps[i] != Temp || millis() - lastUpdated[i] >= minUpdateTime) && sensors.validAddress(tempDeviceAddress) && WaitForAck == false) {
             Temps[i] = Temp;
             Send(BoardAdd);
             Send(" Rom ");
@@ -216,6 +219,7 @@ void OneWireCheck(){
             Send(Temp);
             Send();
             lastUpdated[i]=millis();
+             WaitForAck == true;
           }
       }
     waitingForTempsGlobal =false;
@@ -233,12 +237,15 @@ void OneWireCheck(){
 void AliveCheck(){
   
   if (AlivePin > -1 ){
-    if(millis() - LastAlive < 40000 && IsConnected == true){
-    // LastAlive = millis();
+    if(millis() - LastAlive < 40000 && IsConnected == true){//if connected and data recieved within 40sec set Alive pin High.
   digitalWrite(AlivePin, HIGH); 
   }
   else{
   digitalWrite(AlivePin, LOW); 
+  if(millis() - LastAlive > 81000 && IsConnected == true){//if connected but no data recieved for 81sec reset the board.
+  resetFunc()
+  }
+  
   }
 }
 }
@@ -380,6 +387,7 @@ p PinMode set PWM
 a PinMode AnalogInverted Set
 A PinMode Analog Input Set
 H PinMode Alive
+h acknowledge Data
 I PinMode Digital Input Set
 O PinMode Output Set
 d Input debounce time set
@@ -393,7 +401,7 @@ X Board PinMode Reset
 void DataEvent() {
 
   if (Byte1 == BoardAdd) {
-    LastAlive = millis();
+    LastAlive = millis();//Reset the Alive timer if board  Data
     
     switch (Byte2) {
 
@@ -471,6 +479,10 @@ void DataEvent() {
     case 'H':
       pinMode(Byte3, OUTPUT);
       AlivePin = Byte3;
+      break; 
+      
+    case 'h':
+      WaitForAck = false;
       break; 
       
     case 'I':
