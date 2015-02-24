@@ -9,9 +9,9 @@
 #include <EthernetUdp.h> 
 #endif
 /************************************************************
- *Arduino to Homeseer 3 Plugin API writen by Enigma Theatre.*
- * V1.0.0.42                                                *
- *                                                          *
+ *Arduino to Homeseer 3 Plugin API written by Enigma Theatre.*
+ * V1.0.0.73                                                 *
+ *                                                           *
  *******Change the values below only*************************
  */
 
@@ -141,7 +141,7 @@ void loop() {
 
 
 
-const char* Version = "API1.0.0.66";
+const char* Version = "API1.0.0.73";
 
 byte Byte1,Byte2,Byte3;
 int Byte4,Byte5;
@@ -349,5 +349,23 @@ if (IsConnected == true) {
 }
 }
 
-
+void SendToHS(byte Device, int Data){
+if (IsConnected == true) {
+#if ISIP == 1
+  Udp.beginPacket(Udp.remoteIP(), ServerPort);
+  Udp.print(BoardAdd);
+  Udp.print(" API ");
+  Udp.print(Device);
+  Udp.print(" ");
+  Udp.print(Data);
+  Udp.endPacket();
+#else
+  Serial.print(BoardAdd);
+  Serial.print(" API ");
+  Serial.print(Device);
+  Serial.print(" ");
+  Serial.println(Data);
+#endif
+}
+}
 

@@ -1,9 +1,8 @@
 #include <EEPROM.h>
 
-
 /********************************************************
  *Arduino to Homeseer 3 Plugin written by Enigma Theatre.*
- * V1.0.0.69                                             *
+ * V1.0.0.73                                             *
  *                                                       *
  *******Do not Change any values below*******************
  */
@@ -14,7 +13,7 @@
 const byte BoardAdd = 1;
 byte Byte1,Byte2,Byte3;
 int Byte4,Byte5;
-char* Version = "1.0.0.69";
+char* Version = "1.0.0.73";
 bool IsConnected = false;
 void(* resetFunc) (void) = 0; 
 byte EEpromVersion = EEPROM.read(250);
@@ -28,7 +27,7 @@ bool WaitForAck = false;
 #include <Ethernet.h>
 #include <EthernetUdp.h> 
 
-byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
+byte mac[] = {0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x01};
 IPAddress ip(192,168,0,145);     //IP entered in HS config.
 const unsigned int localPort = 9000;      //port entered in HS config.
 IPAddress HomeseerIP(192,168,0,20); //Homeseer IP address
@@ -232,6 +231,15 @@ void OneWireCheck(){
 }
 //******************************************************************************
 
+
+
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);  // Set the LCD I2C address
+bool LCDInit = false;
+int Available = 0;
+ 
+
 //**********************************Alive Check***********************************
 
 void AliveCheck(){
@@ -243,7 +251,7 @@ void AliveCheck(){
   else{
   digitalWrite(AlivePin, LOW); 
   if(millis() - LastAlive > 81000 && IsConnected == true){//if connected but no data recieved for 81sec reset the board.
-  resetFunc()
+  resetFunc();
   }
   
   }
@@ -389,6 +397,8 @@ A PinMode Analog Input Set
 H PinMode Alive
 h acknowledge Data
 I PinMode Digital Input Set
+L Lcd Display Data
+l Lcd Backlight control
 O PinMode Output Set
 d Input debounce time set
 S Servo set Pos
@@ -471,6 +481,37 @@ void DataEvent() {
       Debounce = Byte3;
       break; 
 
+    case 'l':
+       
+   if (LCDInit == false){
+    lcd.begin(20,4);   // initialize the lcd for 16 chars 2 lines, turn on backlight
+    LCDInit = true;
+  }
+  if (Byte3 == 0){
+     lcd.noBacklight();
+  }
+    if (Byte3 == 1){
+     lcd.backlight();
+  }
+   if (Byte3 == 2){
+     lcd.clear();
+  }
+      break; 
+      
+     case 'L':
+   if (LCDInit == false){
+    lcd.begin(20,4);   // initialize the lcd for 16 chars 2 lines, turn on backlight
+    LCDInit = true;
+  }
+     lcd.setCursor(0,Byte3-1);
+     Serial.read();
+          Available  = (Available -11);
+      for  (count=1;count<Available  ;count++){
+            lcd.write(Serial.read());
+      }
+
+      break; 
+      
     case 'O':
       pinMode(Byte3, OUTPUT);
       digitalWrite(Byte3, Byte4);
@@ -578,6 +619,7 @@ void DataEvent() {
 void serialEvent() {
   while (Serial.available() > 0) {
     delay(17);
+     Available  = Serial.available();
     Byte1 = Serial.parseInt();
     Serial.read();  
     Byte2 = Serial.read(); 
@@ -665,3 +707,4 @@ void loop() {
 }
 
 //****************************************End**************************************************
+
