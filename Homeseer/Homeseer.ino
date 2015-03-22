@@ -2,7 +2,7 @@
 
 /********************************************************
  *Arduino to Homeseer 3 Plugin written by Enigma Theatre.*
- * V1.0.0.73                                             *
+ * V1.0.0.81                                             *
  *                                                       *
  *******Do not Change any values below*******************
  */
@@ -13,13 +13,14 @@
 const byte BoardAdd = 1;
 byte Byte1,Byte2,Byte3;
 int Byte4,Byte5;
-char* Version = "1.0.0.73";
+char* Version = "1.0.0.81";
 bool IsConnected = false;
 void(* resetFunc) (void) = 0; 
 byte EEpromVersion = EEPROM.read(250);
 int AlivePin = -1;
 unsigned long LastAlive = 0;
 bool WaitForAck = false;
+int Available = 0;
 //******************************Ethernet Setup*****************************
 #if ISIP == 1
 
@@ -42,6 +43,7 @@ void UDPCheck(){
   byte packetSize = Udp.parsePacket();
   if(packetSize)
   {
+     Available  = packetSize;
     IPAddress remote = Udp.remoteIP();
     Byte1 =Udp.parseInt();
     Udp.read(); 
@@ -237,7 +239,7 @@ void OneWireCheck(){
 #include <LiquidCrystal_I2C.h>
 LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);  // Set the LCD I2C address
 bool LCDInit = false;
-int Available = 0;
+
  
 
 //**********************************Alive Check***********************************
@@ -504,11 +506,21 @@ void DataEvent() {
     LCDInit = true;
   }
      lcd.setCursor(0,Byte3-1);
+     
+    #if ISIP == 1
+            Udp.read();
+          Available  = (Available -11);
+      for  (count=1;count<Available  ;count++){
+            lcd.write(Udp.read());
+     }
+     #else
+     
      Serial.read();
           Available  = (Available -11);
       for  (count=1;count<Available  ;count++){
             lcd.write(Serial.read());
       }
+     #endif
 
       break; 
       
@@ -707,4 +719,5 @@ void loop() {
 }
 
 //****************************************End**************************************************
+
 
